@@ -1,43 +1,531 @@
-<!-- ================= USER SITE (index.html) ================= --><!DOCTYPE html><html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Micro Chips Exhibitor</title>
-<style>
-body{background:#05070d;color:#fff;font-family:Arial;text-align:center}
-.container{display:flex;flex-wrap:wrap;justify-content:center}
-.card{padding:15px;margin:10px;background:#111;border-radius:10px;cursor:pointer}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Micro Chips Exhibitor | Neural Link</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0a1f0a 0%, #051005 50%, #021002 100%);
+      font-family: 'Segoe UI', 'Poppins', 'Inter', system-ui, -apple-system, sans-serif;
+      color: #e4ffe4;
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* animated background effect */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 20% 40%, rgba(30, 255, 80, 0.08) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* header styling */
+    .hero {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      background: linear-gradient(135deg, #a0ffa0, #2eff7a, #00cc44);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+      text-shadow: 0 0 30px rgba(46, 255, 122, 0.3);
+      animation: glowPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { text-shadow: 0 0 20px rgba(46, 255, 122, 0.2); }
+      50% { text-shadow: 0 0 40px rgba(46, 255, 122, 0.5); }
+    }
+
+    .hero p {
+      color: #8bcb8b;
+      margin-top: 0.75rem;
+      font-weight: 400;
+      font-size: 1rem;
+      letter-spacing: 0.3px;
+      backdrop-filter: blur(5px);
+    }
+
+    .chip-stats {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: #6f9e6f;
+    }
+
+    /* chip grid */
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+
+    .card {
+      background: linear-gradient(145deg, #0e2a0e, #051a05);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(70, 200, 70, 0.35);
+      border-radius: 1.2rem;
+      padding: 1.2rem 0.8rem;
+      width: 135px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(100, 255, 100, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(80, 255, 80, 0.1), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .card:hover::before {
+      left: 100%;
+    }
+
+    .card:hover {
+      transform: translateY(-8px) scale(1.02);
+      border-color: #4eff6e;
+      box-shadow: 0 18px 32px rgba(0, 255, 0, 0.2), inset 0 1px 0 rgba(120, 255, 120, 0.2);
+      background: linear-gradient(145deg, #143814, #052005);
+    }
+
+    .chip-id {
+      font-weight: 800;
+      font-size: 1.1rem;
+      background: rgba(30, 70, 30, 0.7);
+      display: inline-block;
+      padding: 0.25rem 0.9rem;
+      border-radius: 40px;
+      margin-bottom: 0.7rem;
+      letter-spacing: 0.5px;
+      backdrop-filter: blur(4px);
+      border: 1px solid #2faa2f;
+      color: #c3ffc3;
+    }
+
+    .status-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.3rem 0.7rem;
+      border-radius: 30px;
+      display: inline-block;
+      margin: 0.5rem 0 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+    }
+
+    .mode-text {
+      font-size: 0.7rem;
+      background: #0a1f0acc;
+      border-radius: 20px;
+      padding: 0.3rem 0.5rem;
+      margin-top: 8px;
+      font-weight: 600;
+      backdrop-filter: blur(2px);
+      border: 1px solid #2b6e2b;
+      color: #bdf5bd;
+    }
+
+    /* ========= MODAL / POPUP STYLES ========= */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 20, 0, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-container {
+      background: linear-gradient(135deg, #102810, #052005);
+      border-radius: 2rem;
+      width: 90%;
+      max-width: 380px;
+      padding: 0;
+      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(80, 255, 80, 0.3), 0 0 0 4px rgba(0, 30, 0, 0.5);
+      transform: scale(0.9) translateY(20px);
+      transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.2);
+      overflow: hidden;
+    }
+
+    .modal-overlay.active .modal-container {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      background: linear-gradient(95deg, #1a451a, #0b2a0b);
+      padding: 1.3rem 1.5rem;
+      border-bottom: 1px solid #3d8f3d;
+      position: relative;
+    }
+
+    .modal-header h3 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: linear-gradient(120deg, #ccffcc, #6eff8e);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      letter-spacing: -0.3px;
+    }
+
+    .chip-badge-modal {
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+      background: #0f3f0f;
+      padding: 0.2rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: #aaffaa;
+      border: 1px solid #56e056;
+    }
+
+    .modal-body {
+      padding: 1.8rem 1.5rem;
+    }
+
+    .detail-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      padding: 0.7rem 1rem;
+      background: #07180780;
+      border-radius: 1rem;
+      border-left: 3px solid #45ff6e;
+      transition: 0.2s;
+    }
+
+    .detail-icon {
+      font-size: 1.8rem;
+      filter: drop-shadow(0 0 4px #6eff6e);
+    }
+
+    .detail-info {
+      flex: 1;
+    }
+
+    .detail-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #8bcb8b;
+      font-weight: 500;
+    }
+
+    .detail-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ecffec;
+      word-break: break-word;
+    }
+
+    .mode-special {
+      background: linear-gradient(90deg, #0c2a0c, #051805);
+      border-left-color: #ffd966;
+    }
+
+    .status-chip {
+      display: inline-block;
+      padding: 0.2rem 1rem;
+      border-radius: 30px;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem 1.5rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .close-modal-btn {
+      background: linear-gradient(135deg, #1f4f1f, #0a2a0a);
+      border: 1px solid #5bd65b;
+      padding: 0.7rem 2rem;
+      border-radius: 2rem;
+      font-weight: bold;
+      color: #ddffdd;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+      width: 100%;
+      text-align: center;
+    }
+
+    .close-modal-btn:hover {
+      background: #2b762b;
+      transform: scale(1.02);
+      border-color: #9eff9e;
+      box-shadow: 0 4px 12px rgba(0,255,0,0.2);
+      color: white;
+    }
+
+    /* animations for modal content */
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .detail-row {
+      animation: fadeSlideUp 0.25s ease backwards;
+    }
+    .detail-row:nth-child(1) { animation-delay: 0.05s; }
+    .detail-row:nth-child(2) { animation-delay: 0.1s; }
+    .detail-row:nth-child(3) { animation-delay: 0.15s; }
+
+    .footer {
+      text-align: center;
+      margin-top: 3rem;
+      font-size: 0.7rem;
+      color: #568f56;
+      position: relative;
+      z-index: 2;
+    }
+
+    @media (max-width: 640px) {
+      .card { width: 112px; padding: 1rem 0.4rem; }
+      .hero h1 { font-size: 2.1rem; }
+      .chip-id { font-size: 0.9rem; }
+      .modal-container { max-width: 320px; }
+      .detail-value { font-size: 0.95rem; }
+    }
+  </style>
 </head>
 <body>
-<h1>Micro Chips Exhibitor</h1>
-<div class="container" id="chips"></div><script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+<div class="hero">
+  <h1>🌿 MICRO CHIPS EXHIBITOR</h1>
+  <p>✦ neural interface ✦ realtime biochip fleet ✦</p>
+  <div class="chip-stats">
+    <span>⚡ 50 active units</span>
+    <span>🔗 live sync</span>
+    <span>🟢 green core</span>
+  </div>
+</div>
+<div class="container" id="chipsGrid"></div>
+<div class="footer">
+  <span>🔮 click any microchip — deep diagnostic interface</span>
+</div>
 
-const firebaseConfig = {
-apiKey:"AIzaSyA8vpy4CrqrWC7v2--EXy5SXCWhAM9QkRM",
-authDomain:"micro-chip-2f2b9.firebaseapp.com",
-projectId:"micro-chip-2f2b9",
-storageBucket:"micro-chip-2f2b9.firebasestorage.app",
-messagingSenderId:"636898644853",
-appId:"1:636898644853:web:1ad4170cf54d78998cb93c"
-};
+<!-- CUSTOM MODAL STRUCTURE -->
+<div id="chipModal" class="modal-overlay">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3 id="modalChipTitle">CHIP DETAILS</h3>
+      <div class="chip-badge-modal" id="modalChipIdBadge">#--</div>
+    </div>
+    <div class="modal-body">
+      <div class="detail-row">
+        <div class="detail-icon">🔬</div>
+        <div class="detail-info">
+          <div class="detail-label">MODEL</div>
+          <div class="detail-value" id="modalModel">MC-0000</div>
+        </div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-icon">📟</div>
+        <div class="detail-info">
+          <div class="detail-label">STATUS</div>
+          <div class="detail-value" id="modalStatus">—</div>
+        </div>
+      </div>
+      <div class="detail-row mode-special">
+        <div class="detail-icon">🌀</div>
+        <div class="detail-info">
+          <div class="detail-label">OPERATION MODE</div>
+          <div class="detail-value" id="modalMode">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="close-modal-btn" id="closeModalBtn">⟳ CLOSE TERMINAL</button>
+    </div>
+  </div>
+</div>
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const chipsDiv = document.getElementById("chips");
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-onValue(ref(db, "chips"), (snapshot)=>{
-chipsDiv.innerHTML="";
-const data=snapshot.val();
-for(let id in data){
-let chip=data[id];
-let div=document.createElement("div");
-div.className="card";
-div.innerHTML=`Chip ${id}<br>${chip.status}`;
-div.onclick=()=>alert(`Model: ${chip.model}\nStatus: ${chip.status}\nMode: ${chip.mode}`);
-chipsDiv.appendChild(div);
-}
-});
-</script></body>
+  const firebaseConfig = {
+    apiKey: "AIzaSyA8vpy4CrqrWC7v2--EXy5SXCWhAM9QkRM",
+    authDomain: "micro-chip-2f2b9.firebaseapp.com",
+    projectId: "micro-chip-2f2b9",
+    storageBucket: "micro-chip-2f2b9.firebasestorage.app",
+    messagingSenderId: "636898644853",
+    appId: "1:636898644853:web:1ad4170cf54d78998cb93c"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const chipsContainer = document.getElementById("chipsGrid");
+  
+  // Modal elements
+  const modalOverlay = document.getElementById("chipModal");
+  const modalChipTitle = document.getElementById("modalChipTitle");
+  const modalChipIdBadge = document.getElementById("modalChipIdBadge");
+  const modalModel = document.getElementById("modalModel");
+  const modalStatus = document.getElementById("modalStatus");
+  const modalMode = document.getElementById("modalMode");
+  const closeModalBtn = document.getElementById("closeModalBtn");
+
+  // Helper to style status badge (background based on status)
+  function getStatusStyle(statusText) {
+    if (!statusText) return { color: "#e0ffe0", bg: "#1c4a1c", border: "#4ba34b" };
+    const lower = statusText.toLowerCase();
+    if (lower.includes("working") && !lower.includes("failed")) {
+      return { color: "#b9ffb9", bg: "#0f3a0f", border: "#41d641" };
+    }
+    if (lower.includes("crack") || lower.includes("failed")) {
+      return { color: "#ffb4a5", bg: "#552222", border: "#ff6f5e" };
+    }
+    return { color: "#ffe2a3", bg: "#5e4a1a", border: "#e6b422" };
+  }
+
+  // Function to open modal with smooth transition and fill chip data
+  function openChipModal(chipId, model, status, mode) {
+    // Update modal content
+    modalChipTitle.innerHTML = `🔹 CHIP ${chipId}`;
+    modalChipIdBadge.textContent = `ID ${chipId}`;
+    modalModel.textContent = model || `MC-${1000 + Number(chipId)}`;
+    
+    // status with custom style inside modal (show colored badge)
+    const statusStyle = getStatusStyle(status);
+    modalStatus.innerHTML = `<span class="status-chip" style="background: ${statusStyle.bg}; border: 1px solid ${statusStyle.border}; color: ${statusStyle.color};">${status}</span>`;
+    modalMode.textContent = mode || "Tracking";
+    
+    // Add small icon reflection
+    if (mode && mode.toLowerCase().includes("jamming")) {
+      modalMode.style.color = "#ffd966";
+    } else if (mode && mode.toLowerCase().includes("shadow")) {
+      modalMode.style.color = "#b3aaff";
+    } else {
+      modalMode.style.color = "#ecffec";
+    }
+    
+    // Show modal with active class
+    modalOverlay.classList.add("active");
+    document.body.style.overflow = "hidden"; // prevent background scroll
+  }
+
+  function closeModal() {
+    modalOverlay.classList.remove("active");
+    document.body.style.overflow = "";
+  }
+
+  // Event listeners for modal close (button + click on overlay background)
+  closeModalBtn.addEventListener("click", closeModal);
+  modalOverlay.addEventListener("click", (e) => {
+    if (e.target === modalOverlay) closeModal();
+  });
+
+  // Escape key to close modal
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modalOverlay.classList.contains("active")) {
+      closeModal();
+    }
+  });
+
+  // Listen to Firebase and render all chips with enhanced cards
+  onValue(ref(db, "chips"), (snapshot) => {
+    chipsContainer.innerHTML = "";
+    const data = snapshot.val();
+    
+    // Loop through all 50 chips (1 to 50)
+    for (let id = 1; id <= 50; id++) {
+      const chipKey = id.toString();
+      let chip = data && data[chipKey] ? data[chipKey] : null;
+      
+      let status = "Working";
+      let mode = "Tracking";
+      let model = `MC-${1000 + id}`;
+      
+      if (chip) {
+        status = chip.status || "Working";
+        mode = chip.mode || "Tracking";
+        model = chip.model || `MC-${1000 + id}`;
+      }
+      
+      const statusStyle = getStatusStyle(status);
+      
+      const card = document.createElement("div");
+      card.className = "card";
+      
+      // Build card UI
+      card.innerHTML = `
+        <div class="chip-id">⚡ CHIP ${id}</div>
+        <div class="status-badge" style="background: ${statusStyle.bg}; color: ${statusStyle.color}; border: 1px solid ${statusStyle.border};">${status}</div>
+        <div class="mode-text">🎛️ ${mode}</div>
+      `;
+      
+      // Click handler: open beautiful modal instead of alert
+      card.onclick = () => {
+        openChipModal(id, model, status, mode);
+      };
+      
+      chipsContainer.appendChild(card);
+    }
+  }, (error) => {
+    console.error("Firebase read error:", error);
+    chipsContainer.innerHTML = `<p style="color:#ffaa88; background:#2a1a0a; padding:1rem; border-radius:2rem;">⚠️ neural link unstable — reconnecting to microchip fabric...</p>`;
+  });
+</script>
+</body>
 </html>

@@ -1,71 +1,43 @@
-<!DOCTYPE html><html lang="en">
+<!-- ================= USER SITE (index.html) ================= --><!DOCTYPE html><html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Micro Chips Exhibitor</title>
 <style>
-body{margin:0;font-family:Arial;background:#05070d;color:#fff;overflow-x:hidden;}
-header,footer{padding:12px;text-align:center;background:#0d111a;letter-spacing:2px;}/* Landing */ #landing{position:fixed;width:100%;height:100%;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:10;} #landing h1{font-size:40px;animation:glow 2s infinite alternate;} button{padding:12px 25px;background:#00ffcc;border:none;border-radius:8px;color:#000;font-weight:bold;cursor:pointer;transition:.3s;} button:hover{transform:scale(1.1);}
-
-/* Loading */ #loading{display:none;position:fixed;width:100%;height:100%;background:#000;justify-content:center;align-items:center;flex-direction:column;z-index:9;} .progress{width:300px;height:10px;background:#111;border-radius:5px;margin-top:10px;overflow:hidden;} .progress-bar{height:10px;background:linear-gradient(90deg,#00ffcc,#00ff66);width:0%;}
-
-/* Home */ #home{display:none;padding:20px;animation:fadeIn 1s forwards;} .container{display:flex;flex-wrap:wrap;justify-content:center;} .card{background:#0d111a;margin:10px;padding:15px;border-radius:12px;width:120px;text-align:center;cursor:pointer;transition:.3s;box-shadow:0 0 10px #00ffcc33;} .card:hover{transform:scale(1.1);box-shadow:0 0 20px #00ffcc;}
-
-/* Popup */ .popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:#0d111a;padding:25px;border-radius:12px;text-align:center;box-shadow:0 0 25px #00ffcc;transition:.4s;} .popup.active{transform:translate(-50%,-50%) scale(1);}
-
-/* CPU Animation */ .cpu{width:80px;height:80px;border:3px solid #00ffcc;margin:auto;border-radius:10px;position:relative;animation:spin 2s linear infinite;} .cpu:before,.cpu:after{content:'';position:absolute;width:10px;height:10px;background:#00ffcc;} .cpu:before{top:-5px;left:35px;} .cpu:after{bottom:-5px;left:35px;}
-
-@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}} @keyframes fadeIn{from{opacity:0}to{opacity:1}} @keyframes glow{from{text-shadow:0 0 10px #00ffcc}to{text-shadow:0 0 25px #00ffcc}}
-
+body{background:#05070d;color:#fff;font-family:Arial;text-align:center}
+.container{display:flex;flex-wrap:wrap;justify-content:center}
+.card{padding:15px;margin:10px;background:#111;border-radius:10px;cursor:pointer}
 </style>
 </head>
-<body><header>MICRO CHIPS EXHIBITOR</header><div id="landing">
+<body>
 <h1>Micro Chips Exhibitor</h1>
-<button onclick="startProcess()">Get Started</button>
-</div><div id="loading">
-<h2 id="status">Analyzing...</h2>
-<div class="progress"><div class="progress-bar" id="bar"></div></div>
-<p id="percent">0%</p>
-</div><div id="home">
-<div class="container" id="chips"></div>
-</div><div class="popup" id="popup"></div><footer>⚡ Powered by Micro System ⚡</footer><script>
-function startProcess(){
-document.getElementById('landing').style.display='none';
-document.getElementById('loading').style.display='flex';
-let stages=['Analyzing','Binding','Mounting','Tracking'];
-let bar=document.getElementById('bar');
-let percent=document.getElementById('percent');
-let status=document.getElementById('status');
-let p=0,stage=0;
-let interval=setInterval(()=>{
-p++;
-bar.style.width=p+'%';
-percent.innerText=p+'%';
-if(p%25==0){status.innerText=stages[stage]+'...';stage++;}
-if(p>=100){clearInterval(interval);
-document.getElementById('loading').style.display='none';
-document.getElementById('home').style.display='block';}}
-,40);
-}
+<div class="container" id="chips"></div><script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-let chips=document.getElementById('chips');
-let cracked=[5,12,20,33,47];
-for(let i=1;i<=50;i++){
-let div=document.createElement('div');
-div.className='card';
-div.innerText='Chip-'+i;
-div.onclick=()=>{
-let popup=document.getElementById('popup');
-popup.classList.add('active');
-let isBad=cracked.includes(i);
-popup.innerHTML=`<h3>Model: MC-${1000+i}</h3>`+
-(isBad?`<p style='color:red'>❌ Micro Chip Crack‼️<br>Working Failed‼️</p>`:
-`<div class='cpu'></div><p style='color:#00ffcc'>System Running...</p>`)
-+`<br><button onclick="closePop()">Close</button>`;
+const firebaseConfig = {
+apiKey:"AIzaSyA8vpy4CrqrWC7v2--EXy5SXCWhAM9QkRM",
+authDomain:"micro-chip-2f2b9.firebaseapp.com",
+projectId:"micro-chip-2f2b9",
+storageBucket:"micro-chip-2f2b9.firebasestorage.app",
+messagingSenderId:"636898644853",
+appId:"1:636898644853:web:1ad4170cf54d78998cb93c"
 };
-chips.appendChild(div);
-}
 
-function closePop(){document.getElementById('popup').classList.remove('active');}
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const chipsDiv = document.getElementById("chips");
+
+onValue(ref(db, "chips"), (snapshot)=>{
+chipsDiv.innerHTML="";
+const data=snapshot.val();
+for(let id in data){
+let chip=data[id];
+let div=document.createElement("div");
+div.className="card";
+div.innerHTML=`Chip ${id}<br>${chip.status}`;
+div.onclick=()=>alert(`Model: ${chip.model}\nStatus: ${chip.status}\nMode: ${chip.mode}`);
+chipsDiv.appendChild(div);
+}
+});
 </script></body>
 </html>

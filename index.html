@@ -1,0 +1,67 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Micro Chips Exhibitor</title>
+<style>
+body {margin:0;font-family:Arial;background:#0b0f1a;color:#fff;overflow-x:hidden;}
+header,footer{padding:10px;text-align:center;background:#111;}
+.container{display:flex;flex-wrap:wrap;justify-content:center;padding:20px;}
+.card{background:#121a2b;margin:10px;padding:15px;border-radius:10px;cursor:pointer;width:120px;text-align:center;transition:.3s;}
+.card:hover{background:#1f2a44;}
+#landing{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:10;}
+button{padding:10px 20px;border:none;border-radius:5px;background:#0f62fe;color:#fff;cursor:pointer;}
+#loading{display:none;position:fixed;width:100%;height:100%;background:#000;justify-content:center;align-items:center;flex-direction:column;z-index:9;}
+#home{display:none;}
+.progress{width:300px;height:10px;background:#222;border-radius:5px;margin-top:10px;}
+.progress-bar{height:10px;background:#0f62fe;width:0%;border-radius:5px;}
+.popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;padding:20px;border-radius:10px;display:none;}
+</style>
+</head>
+<body><header>Micro Chips Exhibitor</header><div id="landing">
+<h1>Micro Chips Exhibitor</h1>
+<button onclick="startProcess()">Get Started</button>
+</div><div id="loading">
+<h2 id="status">Analyzing...</h2>
+<div class="progress"><div class="progress-bar" id="bar"></div></div>
+<p id="percent">0%</p>
+</div><div id="home">
+<div class="container" id="chips"></div>
+</div><div class="popup" id="popup"></div><footer>© 2026 Micro Chips Exhibitor</footer><script>
+function startProcess(){
+document.getElementById('landing').style.display='none';
+document.getElementById('loading').style.display='flex';
+let stages=['Analyzing','Binding','Mounting','Tracking'];
+let bar=document.getElementById('bar');
+let percent=document.getElementById('percent');
+let status=document.getElementById('status');
+let p=0,stage=0;
+let interval=setInterval(()=>{
+p++;
+bar.style.width=p+'%';
+percent.innerText=p+'%';
+if(p%25==0){status.innerText=stages[stage]+'...';stage++;}
+if(p>=100){clearInterval(interval);
+document.getElementById('loading').style.display='none';
+document.getElementById('home').style.display='block';}}
+,50);
+}
+
+let chips=document.getElementById('chips');
+let cracked=[5,12,20,33,47];
+for(let i=1;i<=50;i++){
+let div=document.createElement('div');
+div.className='card';
+div.innerText='Chip-'+i;
+div.onclick=()=>{
+let popup=document.getElementById('popup');
+popup.style.display='block';
+let status=cracked.includes(i)?'❌ Crack‼️ Working Failed‼️':'✅ Working';
+popup.innerHTML=`<h3>Model: MC-${1000+i}</h3><p>${status}</p><button onclick="closePop()">Close</button>`;
+};
+chips.appendChild(div);
+}
+
+function closePop(){document.getElementById('popup').style.display='none';}
+</script></body>
+</html>

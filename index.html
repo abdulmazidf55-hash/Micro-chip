@@ -4,21 +4,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Micro Chips Exhibitor</title>
 <style>
-body {margin:0;font-family:Arial;background:#0b0f1a;color:#fff;overflow-x:hidden;}
-header,footer{padding:10px;text-align:center;background:#111;}
-.container{display:flex;flex-wrap:wrap;justify-content:center;padding:20px;}
-.card{background:#121a2b;margin:10px;padding:15px;border-radius:10px;cursor:pointer;width:120px;text-align:center;transition:.3s;}
-.card:hover{background:#1f2a44;}
-#landing{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:10;}
-button{padding:10px 20px;border:none;border-radius:5px;background:#0f62fe;color:#fff;cursor:pointer;}
-#loading{display:none;position:fixed;width:100%;height:100%;background:#000;justify-content:center;align-items:center;flex-direction:column;z-index:9;}
-#home{display:none;}
-.progress{width:300px;height:10px;background:#222;border-radius:5px;margin-top:10px;}
-.progress-bar{height:10px;background:#0f62fe;width:0%;border-radius:5px;}
-.popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;padding:20px;border-radius:10px;display:none;}
+body{margin:0;font-family:Arial;background:#05070d;color:#fff;overflow-x:hidden;}
+header,footer{padding:12px;text-align:center;background:#0d111a;letter-spacing:2px;}/* Landing */ #landing{position:fixed;width:100%;height:100%;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:10;} #landing h1{font-size:40px;animation:glow 2s infinite alternate;} button{padding:12px 25px;background:#00ffcc;border:none;border-radius:8px;color:#000;font-weight:bold;cursor:pointer;transition:.3s;} button:hover{transform:scale(1.1);}
+
+/* Loading */ #loading{display:none;position:fixed;width:100%;height:100%;background:#000;justify-content:center;align-items:center;flex-direction:column;z-index:9;} .progress{width:300px;height:10px;background:#111;border-radius:5px;margin-top:10px;overflow:hidden;} .progress-bar{height:10px;background:linear-gradient(90deg,#00ffcc,#00ff66);width:0%;}
+
+/* Home */ #home{display:none;padding:20px;animation:fadeIn 1s forwards;} .container{display:flex;flex-wrap:wrap;justify-content:center;} .card{background:#0d111a;margin:10px;padding:15px;border-radius:12px;width:120px;text-align:center;cursor:pointer;transition:.3s;box-shadow:0 0 10px #00ffcc33;} .card:hover{transform:scale(1.1);box-shadow:0 0 20px #00ffcc;}
+
+/* Popup */ .popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:#0d111a;padding:25px;border-radius:12px;text-align:center;box-shadow:0 0 25px #00ffcc;transition:.4s;} .popup.active{transform:translate(-50%,-50%) scale(1);}
+
+/* CPU Animation */ .cpu{width:80px;height:80px;border:3px solid #00ffcc;margin:auto;border-radius:10px;position:relative;animation:spin 2s linear infinite;} .cpu:before,.cpu:after{content:'';position:absolute;width:10px;height:10px;background:#00ffcc;} .cpu:before{top:-5px;left:35px;} .cpu:after{bottom:-5px;left:35px;}
+
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}} @keyframes fadeIn{from{opacity:0}to{opacity:1}} @keyframes glow{from{text-shadow:0 0 10px #00ffcc}to{text-shadow:0 0 25px #00ffcc}}
+
 </style>
 </head>
-<body><header>Micro Chips Exhibitor</header><div id="landing">
+<body><header>MICRO CHIPS EXHIBITOR</header><div id="landing">
 <h1>Micro Chips Exhibitor</h1>
 <button onclick="startProcess()">Get Started</button>
 </div><div id="loading">
@@ -27,7 +28,7 @@ button{padding:10px 20px;border:none;border-radius:5px;background:#0f62fe;color:
 <p id="percent">0%</p>
 </div><div id="home">
 <div class="container" id="chips"></div>
-</div><div class="popup" id="popup"></div><footer>© 2026 Micro Chips Exhibitor</footer><script>
+</div><div class="popup" id="popup"></div><footer>⚡ Powered by Micro System ⚡</footer><script>
 function startProcess(){
 document.getElementById('landing').style.display='none';
 document.getElementById('loading').style.display='flex';
@@ -44,7 +45,7 @@ if(p%25==0){status.innerText=stages[stage]+'...';stage++;}
 if(p>=100){clearInterval(interval);
 document.getElementById('loading').style.display='none';
 document.getElementById('home').style.display='block';}}
-,50);
+,40);
 }
 
 let chips=document.getElementById('chips');
@@ -55,13 +56,16 @@ div.className='card';
 div.innerText='Chip-'+i;
 div.onclick=()=>{
 let popup=document.getElementById('popup');
-popup.style.display='block';
-let status=cracked.includes(i)?'❌ Crack‼️ Working Failed‼️':'✅ Working';
-popup.innerHTML=`<h3>Model: MC-${1000+i}</h3><p>${status}</p><button onclick="closePop()">Close</button>`;
+popup.classList.add('active');
+let isBad=cracked.includes(i);
+popup.innerHTML=`<h3>Model: MC-${1000+i}</h3>`+
+(isBad?`<p style='color:red'>❌ Micro Chip Crack‼️<br>Working Failed‼️</p>`:
+`<div class='cpu'></div><p style='color:#00ffcc'>System Running...</p>`)
++`<br><button onclick="closePop()">Close</button>`;
 };
 chips.appendChild(div);
 }
 
-function closePop(){document.getElementById('popup').style.display='none';}
+function closePop(){document.getElementById('popup').classList.remove('active');}
 </script></body>
 </html>

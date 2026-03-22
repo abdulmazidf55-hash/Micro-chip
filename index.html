@@ -189,7 +189,7 @@
       background: linear-gradient(135deg, #102810, #052005);
       border-radius: 2rem;
       width: 90%;
-      max-width: 380px;
+      max-width: 420px;
       padding: 0;
       box-shadow: 0 30px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(80, 255, 80, 0.3), 0 0 0 4px rgba(0, 30, 0, 0.5);
       transform: scale(0.9) translateY(20px);
@@ -276,6 +276,38 @@
       border-left-color: #ffd966;
     }
 
+    .ultra-log-row {
+      background: linear-gradient(90deg, #0a1f1a, #041a08);
+      border-left-color: #ffaa44;
+      margin-top: 0.5rem;
+    }
+    
+    .ultra-log-value {
+      font-family: 'Monaco', 'Cascadia Code', monospace;
+      font-size: 0.9rem;
+      background: #00000066;
+      padding: 0.3rem 0.6rem;
+      border-radius: 12px;
+      display: inline-block;
+      width: 100%;
+      letter-spacing: 0.3px;
+    }
+
+    .writing-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1.1rem;
+      background-color: #aaffaa;
+      margin-left: 4px;
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
     .status-chip {
       display: inline-block;
       padding: 0.2rem 1rem;
@@ -330,6 +362,7 @@
     .detail-row:nth-child(1) { animation-delay: 0.05s; }
     .detail-row:nth-child(2) { animation-delay: 0.1s; }
     .detail-row:nth-child(3) { animation-delay: 0.15s; }
+    .detail-row:nth-child(4) { animation-delay: 0.2s; }
 
     .footer {
       text-align: center;
@@ -344,7 +377,7 @@
       .card { width: 112px; padding: 1rem 0.4rem; }
       .hero h1 { font-size: 2.1rem; }
       .chip-id { font-size: 0.9rem; }
-      .modal-container { max-width: 320px; }
+      .modal-container { max-width: 340px; }
       .detail-value { font-size: 0.95rem; }
     }
   </style>
@@ -361,10 +394,10 @@
 </div>
 <div class="container" id="chipsGrid"></div>
 <div class="footer">
-  <span>🔮 click any microchip — deep diagnostic interface</span>
+  <span>🔮 click any microchip — deep diagnostic interface (ultra log included)</span>
 </div>
 
-<!-- CUSTOM MODAL STRUCTURE -->
+<!-- CUSTOM MODAL STRUCTURE with ULTRA LOG row -->
 <div id="chipModal" class="modal-overlay">
   <div class="modal-container">
     <div class="modal-header">
@@ -391,6 +424,17 @@
         <div class="detail-info">
           <div class="detail-label">OPERATION MODE</div>
           <div class="detail-value" id="modalMode">—</div>
+        </div>
+      </div>
+      <!-- NEW ULTRA LOG ROW with writing animation -->
+      <div class="detail-row ultra-log-row" id="ultraLogRow">
+        <div class="detail-icon">📡</div>
+        <div class="detail-info">
+          <div class="detail-label">⚡ ULTRA LOG [ADMIN MSG]</div>
+          <div class="detail-value" id="modalUltraLog">
+            <span id="ultraLogText">awaiting neural uplink...</span>
+            <span id="cursorSpan" class="writing-cursor"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -425,7 +469,9 @@
   const modalStatus = document.getElementById("modalStatus");
   const modalMode = document.getElementById("modalMode");
   const closeModalBtn = document.getElementById("closeModalBtn");
-
+  const ultraLogSpan = document.getElementById("ultraLogText");
+  const cursorSpan = document.getElementById("cursorSpan");
+  
   // Helper to style status badge (background based on status)
   function getStatusStyle(statusText) {
     if (!statusText) return { color: "#e0ffe0", bg: "#1c4a1c", border: "#4ba34b" };
@@ -438,9 +484,92 @@
     }
     return { color: "#ffe2a3", bg: "#5e4a1a", border: "#e6b422" };
   }
-
-  // Function to open modal with smooth transition and fill chip data
+  
+  // --- Writing animation engine ---
+  let activeWritingTimer = null;
+  let currentTargetText = "";
+  
+  function animateUltraLog(newMessage) {
+    // stop any ongoing writing animation
+    if (activeWritingTimer) {
+      clearTimeout(activeWritingTimer);
+      activeWritingTimer = null;
+    }
+    // reset cursor visible
+    cursorSpan.style.display = "inline-block";
+    const targetMsg = newMessage || "🛸 no signal";
+    currentTargetText = targetMsg;
+    let currentDisplay = "";
+    let index = 0;
+    
+    const writeStep = () => {
+      if (index < currentTargetText.length) {
+        currentDisplay += currentTargetText[index];
+        ultraLogSpan.innerText = currentDisplay;
+        index++;
+        activeWritingTimer = setTimeout(writeStep, 45); // smooth typing effect 45ms
+      } else {
+        // finished writing, cursor stays blinking
+        ultraLogSpan.innerText = currentTargetText;
+        if (activeWritingTimer) clearTimeout(activeWritingTimer);
+        activeWritingTimer = null;
+        // cursor remains for blinking effect
+      }
+    };
+    ultraLogSpan.innerText = "";
+    writeStep();
+  }
+  
+  // update ultra log content for currently opened chip (real-time listener)
+  let currentModalChipId = null;
+  let activeUltraLogRef = null;
+  
+  function subscribeToUltraLog(chipId) {
+    if (activeUltraLogRef) {
+      // unsubscribe previous listener
+      activeUltraLogRef();
+      activeUltraLogRef = null;
+    }
+    if (!chipId) return;
+    const ultraLogPath = ref(db, `ultraLogs/${chipId}`);
+    const handler = onValue(ultraLogPath, (snapshot) => {
+      const logData = snapshot.val();
+      let newLogMessage = "📡 idle — admin log not set";
+      if (logData && typeof logData === 'object' && logData.message) {
+        newLogMessage = logData.message;
+      } else if (logData && typeof logData === 'string') {
+        newLogMessage = logData;
+      } else if (logData && logData.text) {
+        newLogMessage = logData.text;
+      } else {
+        // fallback: keep previous but show default
+        newLogMessage = "⚙️ waiting for admin ultra log...";
+      }
+      // only animate if modal is currently open for this chip (avoid conflicts)
+      if (currentModalChipId === chipId) {
+        animateUltraLog(newLogMessage);
+      }
+    }, (error) => {
+      console.warn("ultraLog listener error", error);
+      if (currentModalChipId === chipId) {
+        animateUltraLog("⚠️ ultra log stream error");
+      }
+    });
+    activeUltraLogRef = () => handler(); // cleanup function
+  }
+  
+  // Function to open modal with smooth transition and fill chip data + ultra log
   function openChipModal(chipId, model, status, mode) {
+    // Save current chip ID to handle realtime updates
+    if (currentModalChipId !== chipId) {
+      currentModalChipId = chipId;
+      // subscribe to ultra log for this specific chip
+      subscribeToUltraLog(chipId);
+    } else {
+      // still ensure listener is active for same chip, but resubscribe if needed
+      if (!activeUltraLogRef) subscribeToUltraLog(chipId);
+    }
+    
     // Update modal content
     modalChipTitle.innerHTML = `🔹 CHIP ${chipId}`;
     modalChipIdBadge.textContent = `ID ${chipId}`;
@@ -451,7 +580,7 @@
     modalStatus.innerHTML = `<span class="status-chip" style="background: ${statusStyle.bg}; border: 1px solid ${statusStyle.border}; color: ${statusStyle.color};">${status}</span>`;
     modalMode.textContent = mode || "Tracking";
     
-    // Add small icon reflection
+    // reflect mode style
     if (mode && mode.toLowerCase().includes("jamming")) {
       modalMode.style.color = "#ffd966";
     } else if (mode && mode.toLowerCase().includes("shadow")) {
@@ -460,35 +589,62 @@
       modalMode.style.color = "#ecffec";
     }
     
+    // Fetch current ultra log value from Firebase directly to show initial before realtime kicks
+    import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js").then(({ get, child }) => {
+      get(child(ref(db), `ultraLogs/${chipId}`)).then((snap) => {
+        if (snap.exists()) {
+          let val = snap.val();
+          let initMsg = "";
+          if (typeof val === 'string') initMsg = val;
+          else if (val.message) initMsg = val.message;
+          else if (val.text) initMsg = val.text;
+          else initMsg = "📡 custom uplink active";
+          if (currentModalChipId === chipId) {
+            animateUltraLog(initMsg);
+          }
+        } else {
+          if (currentModalChipId === chipId) {
+            animateUltraLog("✨ ready — admin can push ultra log");
+          }
+        }
+      }).catch(() => {
+        if (currentModalChipId === chipId) animateUltraLog("🔌 waiting for connection");
+      });
+    });
+    
     // Show modal with active class
     modalOverlay.classList.add("active");
-    document.body.style.overflow = "hidden"; // prevent background scroll
+    document.body.style.overflow = "hidden";
   }
 
   function closeModal() {
     modalOverlay.classList.remove("active");
     document.body.style.overflow = "";
+    // stop any ongoing writing animation to avoid ghost updates
+    if (activeWritingTimer) {
+      clearTimeout(activeWritingTimer);
+      activeWritingTimer = null;
+    }
+    // optional: keep subscription but no visual updates needed
   }
 
-  // Event listeners for modal close (button + click on overlay background)
+  // Event listeners for modal close
   closeModalBtn.addEventListener("click", closeModal);
   modalOverlay.addEventListener("click", (e) => {
     if (e.target === modalOverlay) closeModal();
   });
 
-  // Escape key to close modal
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && modalOverlay.classList.contains("active")) {
       closeModal();
     }
   });
 
-  // Listen to Firebase and render all chips with enhanced cards
+  // Listen to Firebase chips and render grid
   onValue(ref(db, "chips"), (snapshot) => {
     chipsContainer.innerHTML = "";
     const data = snapshot.val();
     
-    // Loop through all 50 chips (1 to 50)
     for (let id = 1; id <= 50; id++) {
       const chipKey = id.toString();
       let chip = data && data[chipKey] ? data[chipKey] : null;
@@ -508,14 +664,12 @@
       const card = document.createElement("div");
       card.className = "card";
       
-      // Build card UI
       card.innerHTML = `
         <div class="chip-id">⚡ CHIP ${id}</div>
         <div class="status-badge" style="background: ${statusStyle.bg}; color: ${statusStyle.color}; border: 1px solid ${statusStyle.border};">${status}</div>
         <div class="mode-text">🎛️ ${mode}</div>
       `;
       
-      // Click handler: open beautiful modal instead of alert
       card.onclick = () => {
         openChipModal(id, model, status, mode);
       };
